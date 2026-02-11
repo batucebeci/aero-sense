@@ -1,0 +1,40 @@
+line-length = 110
+target-version = "py311"
+extend-exclude = ["outputs", "models", "data", ".venv"]
+
+[lint]
+select = [
+    "E", "F", "W",     # pycodestyle + pyflakes
+    "I",                # isort
+    "UP",               # pyupgrade
+    "B",                # bugbear
+    "SIM",              # simplify
+    "C4",               # comprehensions
+    "PIE",              # misc lints
+    "RUF",              # ruff-specific
+]
+ignore = [
+    "E501",             # line length handled by formatter
+    "B008",             # FastAPI Depends/File defaults
+    "B904",             # raise-without-from (HTTP error patterns)
+    "B905",             # zip without strict
+    "B007",             # unused loop variable
+    "C408",             # dict(...) over literal — kwarg style is fine
+    "RUF001",           # ambiguous unicode (Turkish strings)
+    "RUF002",           # ambiguous unicode in docstrings
+    "RUF005",           # iterable unpacking vs concat
+    "RUF007",           # zip-instead-of-pairwise (utility code)
+    "RUF012",           # mutable class attrs without ClassVar
+    "SIM105",           # contextlib.suppress preference
+    "SIM108",           # ternary over if-else
+    "E402",             # late imports (deferred to avoid cycles)
+    "UP035",            # deprecated Sequence import path
+]
+
+[lint.per-file-ignores]
+"tests/*" = ["E501", "F401"]
+"app/main.py" = ["E402"]
+
+[format]
+quote-style = "double"
+indent-style = "space"
