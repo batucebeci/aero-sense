@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Alarms · Aero-Sense{% endblock %}
+{% block content %}
+<section class="page-header">
+  <h1>Alarm log</h1>
+  <p class="lead muted">Predictions with High or Critical risk are kept in a ring buffer. The page shows the most recent 200 alarms.</p>
+</section>
+
+<section class="grid grid-3">
+  <div class="card"><h3>Total alarms</h3><p class="metric">{{ n_total }}</p></div>
+  <div class="card"><h3>Critical</h3><p class="metric">{{ by_risk.get("Critical", 0) }}</p></div>
+  <div class="card"><h3>High</h3><p class="metric">{{ by_risk.get("High", 0) }}</p></div>
+</section>
+
+<section class="card inline-form">
+  <form method="post" action="/alarms/clear">
+    <button class="btn-secondary" type="submit">Clear log</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Recent alarms</h2>
+  {% if alarms %}
+  <table class="data-table">
+    <thead><tr><th>Time (UTC)</th><th>System</th><th>Fault</th><th>Risk</th><th>Confidence</th><th>Source</th></tr></thead>
+    <tbody>
+      {% for a in alarms %}
+      <tr>
+        <td>{{ a.timestamp }}</td>
+        <td>{{ a.system_id or "—" }}</td>
+        <td>{{ a.fault }}</td>
+        <td><span class="badge {% if a.risk == 'Critical' %}bad{% else %}ok{% endif %}">{{ a.risk }}</span></td>
+        <td>{% if a.confidence is not none %}{{ "%.1f"|format(100 * a.confidence) }}%{% else %}—{% endif %}</td>
+        <td>{{ a.source }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No alarms yet. Run a prediction on the Predict or Live page.</p>
+  {% endif %}
+</section>
+{% endblock %}
