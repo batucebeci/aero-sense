@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Explain · Aero-Sense{% endblock %}
+{% block content %}
+<section class="page-header">
+  <h1>Explainability</h1>
+  <p class="lead muted">Explain model decisions with SHAP — both global feature importance and per-sample contributions.</p>
+</section>
+
+{% if not has_models %}
+  <section class="card"><p class="muted">Train models first on the <a href="/train">Train</a> page.</p></section>
+{% else %}
+<form method="get" action="/explain" class="card inline-form">
+  <label>Model
+    <select name="model">
+      {% for name in model_names %}
+        <option value="{{ name }}" {% if name == target_model %}selected{% endif %}>{{ name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Sample index (0–{{ max_sample_index }})
+    <input type="number" name="sample_index" value="{{ sample_index }}" min="0" max="{{ max_sample_index }}">
+  </label>
+  <button class="btn-secondary" type="submit">Refresh</button>
+</form>
+
+<section class="card">
+  <h2>Global SHAP importance</h2>
+  <div class="chart">{{ importance_chart | safe }}</div>
+  <details class="muted">
+    <summary>Top 15 features (table)</summary>
+    <div class="scroll-x">{{ importance_html | safe }}</div>
+  </details>
+</section>
+
+<section class="card">
+  <h2>Per-prediction explanation</h2>
+  <p>
+    <strong>Predicted:</strong> {{ predicted_label }}
+    {% if is_correct %}
+      <span class="badge ok">correct</span>
+    {% else %}
+      <span class="badge bad">actual: {{ actual_label }}</span>
+    {% endif %}
+  </p>
+  <div class="chart">{{ per_prediction_chart | safe }}</div>
+  <div class="chart">{{ waterfall_chart | safe }}</div>
+  <div class="scroll-x">{{ top_features_html | safe }}</div>
+  <p class="muted small">For a counterfactual explanation see <a href="/counterfactual?sample_index={{ sample_index }}">/counterfactual</a>.</p>
+</section>
+{% endif %}
+{% endblock %}
