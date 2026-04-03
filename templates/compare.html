@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Compare · Aero-Sense{% endblock %}
+{% block content %}
+<section class="page-header">
+  <h1>Multi-system comparison</h1>
+  <p class="lead muted">Compare the same sensor across systems over time and view the system × fault distribution as a heatmap.</p>
+</section>
+
+{% if not has_data %}
+  <section class="card"><p class="muted">Load a dataset first from the <a href="/data">Dataset</a> page.</p></section>
+{% else %}
+<section class="card inline-form">
+  <form method="get" action="/compare" class="inline-form">
+    <label>Feature
+      <select name="feature">
+        {% for s in available_sensors %}
+          <option value="{{ s }}" {% if s == selected_feature %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button class="btn-secondary" type="submit">Refresh</button>
+  </form>
+  <div><span class="muted">Systems:</span> <strong>{{ n_systems }}</strong></div>
+</section>
+
+<section class="card">
+  <h2>{{ selected_feature }} — system overlay</h2>
+  <div class="chart">{{ system_comparison_chart | safe }}</div>
+</section>
+
+<section class="card">
+  <h2>Fault counts per system</h2>
+  <div class="chart">{{ fault_heatmap | safe }}</div>
+</section>
+
+<section class="card">
+  <h2>Per-system summary</h2>
+  <div class="scroll-x">{{ per_system_html | safe }}</div>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Counterfactual · Aero-Sense{% endblock %}
+{% block content %}
+<section class="page-header">
+  <h1>Counterfactual explanation</h1>
+  <p class="lead muted">"What would have to change for this sample to be classified as Y instead of X?" Searched with greedy coordinate descent.</p>
+</section>
+
+{% if not has_models %}
+  <section class="card"><p class="muted">Train models first on the <a href="/train">Train</a> page.</p></section>
+{% else %}
+<form method="get" action="/counterfactual" class="card inline-form">
+  <label>Sample index (0–{{ max_sample_index }})
+    <input type="number" name="sample_index" value="{{ sample_index }}" min="0" max="{{ max_sample_index }}">
+  </label>
+  <label>Target class
+    <select name="target">
+      {% for name in class_names %}
+        <option value="{{ name }}" {% if name == target_label %}selected{% endif %}>{{ name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <button class="btn-secondary" type="submit">Search</button>
+</form>
+
+<section class="grid grid-3">
+  <div class="card"><h3>Actual</h3><p class="metric small">{{ actual_label }}</p></div>
+  <div class="card"><h3>Predicted</h3><p class="metric small">{{ pred_label }}</p></div>
+  <div class="card"><h3>Counterfactual</h3><p class="metric small">{{ counterfactual_pred }}</p></div>
+</section>
+
+<section class="card">
+  <h2>Result</h2>
+  <p>
+    Status:
+    {% if success %}<span class="badge ok">flip successful in {{ steps }} steps</span>
+    {% else %}<span class="badge bad">no flip after {{ steps }} steps</span>{% endif %}
+  </p>
+
+  {% if impacted %}
+  <table class="data-table">
+    <thead><tr><th>Feature</th><th>Original (scaled)</th><th>Counterfactual (scaled)</th><th>Δ</th></tr></thead>
+    <tbody>
+      {% for row in impacted %}
+      <tr>
+        <td>{{ row.feature }}</td>
+        <td>{{ "%.3f"|format(row.original_scaled) }}</td>
+        <td>{{ "%.3f"|format(row.counterfactual_scaled) }}</td>
+        <td>{{ "%.3f"|format(row.delta_scaled) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No features changed (the sample may already be in the target class).</p>
+  {% endif %}
+  <p class="muted small">Values are in the scaled (post-StandardScaler) space.</p>
+</section>
+{% endif %}
+{% endblock %}
