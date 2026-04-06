@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Live · Aero-Sense{% endblock %}
+{% block content %}
+<section class="page-header">
+  <h1>Live streaming</h1>
+  <p class="lead muted">Synthetic sensor data streams over WebSocket every 700 ms; the trained model predicts each tick on the fly.</p>
+</section>
+
+{% if not has_models %}
+  <section class="card">
+    <p class="muted">No trained model yet — the page stays open and only shows raw sensor readings. For predictions, train first on <a href="/train">Train</a>.</p>
+  </section>
+{% endif %}
+
+<section class="grid grid-3">
+  <div class="card"><h3>Last fault</h3><p id="last-fault" class="metric small">—</p></div>
+  <div class="card"><h3>Confidence</h3><p id="last-conf" class="metric small">—</p></div>
+  <div class="card"><h3>Risk</h3><p id="last-risk" class="metric small">—</p></div>
+</section>
+
+<section class="card">
+  <h2>Motor temperature (live)</h2>
+  <div id="chart-motor" style="height: 280px;"></div>
+</section>
+<section class="card">
+  <h2>Vibration magnitude (live)</h2>
+  <div id="chart-vibration" style="height: 280px;"></div>
+</section>
+<section class="card">
+  <h2>Battery level + voltage (live)</h2>
+  <div id="chart-power" style="height: 280px;"></div>
+</section>
+
+<section class="card">
+  <h2>Stream tail</h2>
+  <table class="data-table">
+    <thead><tr><th>Time</th><th>Actual</th><th>Predicted</th><th>Risk</th><th>Confidence</th></tr></thead>
+    <tbody id="stream-tail"></tbody>
+  </table>
+</section>
+
+<script>
+  const WINDOW = 80;
+  const series = {
+    t: [],
+    motor_temperature: [],
+    vibration_x: [],
+    vibration_y: [],
+    vibration_z: [],
+    battery_level: [],
+    voltage: [],
+  };
+  const layoutBase = {
+    margin: { t: 30, b: 40, l: 50, r: 20 },
+    template: "plotly_white",
+    xaxis: { type: "date" },
+  };
+  Plotly.newPlot("chart-motor", [{ x: [], y: [], mode: "lines", line: { color: "#ef4444" }, name: "motor_temperature" }], layoutBase);
+  Plotly.newPlot("chart-vibration", [{ x: [], y: [], mode: "lines", line: { color: "#0ea5e9" }, name: "vibration_mag" }], layoutBase);
+  Plotly.newPlot("chart-power", [
+    { x: [], y: [], mode: "lines", line: { color: "#22c55e" }, name: "battery_level", yaxis: "y" },
+    { x: [], y: [], mode: "lines", line: { color: "#f59e0b" }, name: "voltage", yaxis: "y2" },
+  ], Object.assign({}, layoutBase, { yaxis2: { overlaying: "y", side: "right" } }));
+
+  const tailTbody = document.getElementById("stream-tail");
+  const wsProto = location.protocol === "https:" ? "wss" : "ws";
+  const ws = new WebSocket(`${wsProto}://${location.host}/ws/live`);
+
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    const t = new Date(data.t);
+    const s = data.sensors;
+
+    document.getElementById("last-fault").textContent = data.predicted_fault || data.actual_fault;
+    document.getElementById("last-conf").textContent = data.confidence ? (data.confidence * 100).toFixed(1) + "%" : "—";
+    document.getElementById("last-risk").textContent = data.risk_level || "—";
+
+    series.t.push(t);
+    series.motor_temperature.push(s.motor_temperature);
+    const vibMag = Math.sqrt(s.vibration_x * s.vibration_x + s.vibration_y * s.vibration_y + s.vibration_z * s.vibration_z);
+    series.vibration_x.push(vibMag);
+    series.battery_level.push(s.battery_level);
+    series.voltage.push(s.voltage);
+
+    if (series.t.length > WINDOW) {
+      for (const k of Object.keys(series)) series[k].shift();
+    }
+
+    Plotly.react("chart-motor", [{ x: series.t, y: series.motor_temperature, mode: "lines", line: { color: "#ef4444" } }], layoutBase);
+    Plotly.react("chart-vibration", [{ x: series.t, y: series.vibration_x, mode: "lines", line: { color: "#0ea5e9" } }], layoutBase);
+    Plotly.react("chart-power", [
+      { x: series.t, y: series.battery_level, mode: "lines", line: { color: "#22c55e" }, name: "battery_level", yaxis: "y" },
+      { x: series.t, y: series.voltage, mode: "lines", line: { color: "#f59e0b" }, name: "voltage", yaxis: "y2" },
+    ], Object.assign({}, layoutBase, { yaxis2: { overlaying: "y", side: "right" } }));
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${data.t.slice(11,19)}</td>
+      <td>${data.actual_fault}</td>
+      <td>${data.predicted_fault || "—"}</td>
+      <td><span class="badge ${data.risk_level === 'Critical' ? 'bad' : 'ok'}">${data.risk_level || "—"}</span></td>
+      <td>${data.confidence ? (data.confidence * 100).toFixed(1) + "%" : "—"}</td>
+    `;
+    tailTbody.prepend(row);
+    while (tailTbody.children.length > 15) tailTbody.removeChild(tailTbody.lastChild);
+  };
+  ws.onclose = () => {
+    document.getElementById("last-fault").textContent = "(stream closed)";
+  };
+</script>
+{% endblock %}

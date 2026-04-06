@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Overview · Aero-Sense{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>Aero-Sense</h1>
+  <p class="subtitle">Sensor Fusion &amp; Fault Diagnosis</p>
+  <p class="lead">
+    Multi-sensor fusion, ML-based fault classification and SHAP explainability
+    — in a single FastAPI application.
+  </p>
+</section>
+
+<section class="grid grid-4">
+  <div class="card">
+    <h3>Dataset</h3>
+    <p class="metric">{{ summary.rows or "—" }}</p>
+    <small>rows loaded</small>
+  </div>
+  <div class="card">
+    <h3>Fused features</h3>
+    <p class="metric">{{ summary.fused_features or "—" }}</p>
+    <small>raw + derived + cross-domain</small>
+  </div>
+  <div class="card">
+    <h3>Models trained</h3>
+    <p class="metric">{{ summary.n_models }}</p>
+    <small>classifiers</small>
+  </div>
+  <div class="card">
+    <h3>Best model</h3>
+    <p class="metric small">{{ summary.best_model or "—" }}</p>
+    <small>by macro F1</small>
+  </div>
+</section>
+
+<section class="card lg">
+  <h2>How to use</h2>
+  <ol>
+    <li>On the <strong>Dataset</strong> page, load a sample dataset, generate synthetic data, or upload your own CSV.</li>
+    <li>Use <strong>Features</strong> to inspect the derived features built from raw sensors.</li>
+    <li>Open <strong>Train</strong> to fit and compare 7 classifiers.</li>
+    <li>Use <strong>Predict</strong> for fault predictions and <strong>Explain</strong> for SHAP explanations.</li>
+    <li>Download CSV / HTML / PDF reports from the <strong>Report</strong> page.</li>
+  </ol>
+  <p class="muted">
+    For REST API endpoints see <a href="/docs">/docs</a> (OpenAPI / Swagger).
+  </p>
+</section>
+{% endblock %}
