@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Report · Aero-Sense{% endblock %}
+{% block content %}
+<section class="page-header">
+  <h1>Decision support report</h1>
+  <p class="lead muted">Turn the predictions, risk levels and recommended actions into a downloadable report.</p>
+</section>
+
+{% if not has_predictions %}
+  <section class="card"><p class="muted">Run a prediction first on the <a href="/predict">Predict</a> page.</p></section>
+{% else %}
+<section class="grid grid-3">
+  <div class="card"><h3>Total samples</h3><p class="metric">{{ summary.total_samples }}</p></div>
+  <div class="card"><h3>Average confidence</h3>
+    <p class="metric">{% if summary.average_confidence is defined %}{{ "%.1f"|format(100 * summary.average_confidence) }}%{% else %}—{% endif %}</p>
+  </div>
+  <div class="card"><h3>Distinct faults</h3><p class="metric">{{ summary.fault_counts|length }}</p></div>
+</section>
+
+<section class="card">
+  <h2>Downloads</h2>
+  <p>
+    <a class="btn-primary" href="/report/csv">Download CSV</a>
+    <a class="btn-secondary" href="/report/html">Download HTML report</a>
+    <a class="btn-secondary" href="/report/pdf">Download PDF report</a>
+  </p>
+  <p class="muted small">Model: {{ model_name }}</p>
+</section>
+
+<section class="card">
+  <h2>Records (first 100)</h2>
+  <div class="scroll-x">{{ records_html | safe }}</div>
+</section>
+{% endif %}
+{% endblock %}

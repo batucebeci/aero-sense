@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Registry · Aero-Sense{% endblock %}
+{% block content %}
+<section class="page-header">
+  <h1>Model registry</h1>
+  <p class="lead muted">After every training run, the best model is versioned on disk under a version_id. Use <code>load_model(version_id)</code> to restore older versions.</p>
+</section>
+
+<section class="grid grid-3">
+  <div class="card"><h3>Stored versions</h3><p class="metric">{{ n_entries }}</p></div>
+  <div class="card"><h3>Path</h3><p class="metric small">models/registry/</p></div>
+  <div class="card"><h3>Index</h3><p class="metric small">index.jsonl</p></div>
+</section>
+
+<section class="card">
+  <h2>History</h2>
+  {% if entries %}
+  <table class="data-table">
+    <thead><tr><th>Version</th><th>Model</th><th>F1 (macro)</th><th>Accuracy</th><th>Features</th><th>Created (UTC)</th></tr></thead>
+    <tbody>
+      {% for e in entries %}
+      <tr>
+        <td><code>{{ e.version_id }}</code></td>
+        <td>{{ e.model_name }}</td>
+        <td>{{ "%.4f"|format(e.metric_f1) }}</td>
+        <td>{{ "%.4f"|format(e.metric_accuracy) }}</td>
+        <td>{{ e.n_features }}</td>
+        <td>{{ e.created_at }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p class="muted">No model versions yet. Train a model from the Train page.</p>
+  {% endif %}
+</section>
+{% endblock %}
