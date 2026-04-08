@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Runs · Aero-Sense{% endblock %}
+{% block content %}
+<section class="page-header">
+  <h1>Run history</h1>
+  <p class="lead muted">Every train, anomaly, tuning, RUL, drift and predict run is appended to a local JSONL file.</p>
+</section>
+
+<section class="grid grid-3">
+  <div class="card"><h3>Total runs</h3><p class="metric">{{ n_runs }}</p></div>
+  <div class="card"><h3>Log location</h3><p class="metric small">outputs/runs/run_log.jsonl</p></div>
+  <div class="card"><h3>Latest first</h3><p class="metric small">↓</p></div>
+</section>
+
+<section class="card">
+  <h2>Runs (latest 100)</h2>
+  {% if runs_html %}
+    <div class="scroll-x">{{ runs_html | safe }}</div>
+  {% else %}
+    <p class="muted">No runs yet. Run Train / Tune / Predict / Anomaly / RUL / Drift to populate the log.</p>
+  {% endif %}
+</section>
+{% endblock %}

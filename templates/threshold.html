@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Threshold tuning · Aero-Sense{% endblock %}
+{% block content %}
+<section class="page-header">
+  <h1>Per-class threshold tuning</h1>
+  <p class="lead muted">On imbalanced datasets, raise the rare-fault recall by lowering its decision threshold. The chart below shows each class' precision-recall curve and the current operating point.</p>
+</section>
+
+{% if not has_models %}
+  <section class="card"><p class="muted">Train models first on the <a href="/train">Train</a> page.</p></section>
+{% elif no_proba %}
+  <section class="card"><p class="muted">Model <strong>{{ target_model }}</strong> does not expose <code>predict_proba</code>, so threshold tuning is unavailable. Pick another model on <a href="/predict">Predict</a>.</p></section>
+{% else %}
+
+<form method="post" action="/threshold/optimize" class="card inline-form">
+  <label>Strategy
+    <select name="strategy">
+      <option value="recall">Maximize threshold subject to target recall</option>
+      <option value="f1">Maximize F1 per class</option>
+    </select>
+  </label>
+  <label>Target recall (used with recall strategy)
+    <input type="number" step="0.05" name="target_recall" value="0.9" min="0.5" max="1.0">
+  </label>
+  <button class="btn-primary" type="submit">Optimize</button>
+  <form method="post" action="/threshold/reset" style="display:inline; margin-left:8px;">
+    <button class="btn-ghost" type="submit">Reset to default (argmax)</button>
+  </form>
+</form>
+
+<section class="grid grid-3">
+  <div class="card"><h3>Model</h3><p class="metric small">{{ target_model }}</p></div>
+  <div class="card"><h3>Macro F1 (default)</h3><p class="metric">{{ macro_f1_before if macro_f1_before is not none else "—" }}</p></div>
+  <div class="card"><h3>Macro F1 (current thresholds)</h3><p class="metric">{{ macro_f1_after if macro_f1_after is not none else "—" }}</p></div>
+</section>
+
+<section class="card">
+  <h2>Precision-recall curves with selected thresholds</h2>
+  <div class="chart">{{ pr_chart | safe }}</div>
+</section>
+
+<section class="card">
+  <h2>Per-class threshold overview</h2>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Class</th>
+        <th>Positive samples</th>
+        <th>Max-F1 threshold</th>
+        <th>Max F1</th>
+        <th>Selected threshold</th>
+        <th>Precision @ selected</th>
+        <th>Recall @ selected</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in overview %}
+      <tr>
+        <td>{{ r.class_name }}</td>
+        <td>{{ r.n_positive }}</td>
+        <td>{{ r.max_f1_threshold }}</td>
+        <td>{{ r.max_f1 }}</td>
+        <td>{{ r.selected_threshold }}</td>
+        <td>{{ r.precision_at_selected }}</td>
+        <td>{{ r.recall_at_selected }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="card">
+  <h2>Per-class metrics before vs after</h2>
+  <div class="grid grid-2">
+    <div>
+      <h3 class="muted small">Default (argmax)</h3>
+      <div class="scroll-x">{{ before_html | safe }}</div>
+    </div>
+    <div>
+      <h3 class="muted small">With selected thresholds</h3>
+      <div class="scroll-x">{{ after_html | safe }}</div>
+    </div>
+  </div>
+  <p class="muted small">When thresholds are active they also apply to the <a href="/predict">/predict</a> page, the alarm log, and the report exports.</p>
+</section>
+{% endif %}
+{% endblock %}

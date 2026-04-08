@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}RUL · Aero-Sense{% endblock %}
+{% block content %}
+<section class="page-header">
+  <h1>Remaining Useful Life (RUL)</h1>
+  <p class="lead muted">Each system's lifecycle is treated as a regression target — the model estimates how many cycles remain before failure from current sensor readings.</p>
+</section>
+
+{% if not has_data %}
+  <section class="card"><p class="muted">Load a dataset first from the <a href="/data">Dataset</a> page.</p></section>
+{% else %}
+<form method="post" action="/rul/train" class="card inline-form">
+  <label>Model
+    <select name="model_kind">
+      <option value="random_forest">Random Forest Regressor</option>
+      <option value="gbr">Gradient Boosting Regressor</option>
+    </select>
+  </label>
+  <button class="btn-primary" type="submit">Train RUL model</button>
+</form>
+{% endif %}
+
+{% if has_rul %}
+<section class="grid grid-4">
+  <div class="card"><h3>MAE</h3><p class="metric">{{ "%.2f"|format(mae) }}</p></div>
+  <div class="card"><h3>RMSE</h3><p class="metric">{{ "%.2f"|format(rmse) }}</p></div>
+  <div class="card"><h3>R²</h3><p class="metric">{{ "%.3f"|format(r2) }}</p></div>
+  <div class="card"><h3>Train time</h3><p class="metric">{{ "%.2f"|format(train_seconds) }}s</p></div>
+</section>
+
+<section class="card">
+  <h2>Predicted vs actual</h2>
+  <div class="chart">{{ scatter_chart | safe }}</div>
+</section>
+
+<section class="card">
+  <h2>Residual distribution</h2>
+  <div class="chart">{{ residual_chart | safe }}</div>
+</section>
+{% endif %}
+{% endblock %}
