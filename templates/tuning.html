@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Tuning · Aero-Sense{% endblock %}
+{% block content %}
+<section class="page-header">
+  <h1>Hyperparameter tuning</h1>
+  <p class="lead muted">Optimize model hyperparameters with the Optuna TPE sampler to maximize macro-F1.</p>
+</section>
+
+{% if not has_models %}
+  <section class="card"><p class="muted">Train models first on the <a href="/train">Train</a> page.</p></section>
+{% else %}
+<form method="post" action="/tuning/run" class="card inline-form">
+  <label>Model
+    <select name="model_name">
+      {% for name in model_names %}
+        <option value="{{ name }}">{{ name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Trials
+    <input type="number" name="n_trials" value="20" min="5" max="200">
+  </label>
+  <label>Timeout (s)
+    <input type="number" name="timeout_seconds" value="120" min="10" max="900">
+  </label>
+  <label>Apply best params
+    <select name="apply">
+      <option value="false">Search only</option>
+      <option value="true">Search &amp; apply</option>
+    </select>
+  </label>
+  <button class="btn-primary" type="submit" onclick="document.getElementById('tune-spinner').style.display='inline';">Start tuning</button>
+  <span id="tune-spinner" style="display:none; margin-left:12px; color:var(--muted);">tuning… expect ~1–5 min on medium data, longer on CMAPSS</span>
+</form>
+{% endif %}
+
+{% if tuning_results %}
+<section class="card">
+  <h2>Tuning history</h2>
+  <table class="data-table">
+    <thead><tr><th>Model</th><th>Best F1 (macro)</th><th>Trials</th><th>Elapsed (s)</th><th>Best params</th></tr></thead>
+    <tbody>
+      {% for name, result in tuning_results.items() %}
+      <tr>
+        <td>{{ name }}</td>
+        <td>{{ "%.4f"|format(result.best_score) }}</td>
+        <td>{{ result.n_trials }}</td>
+        <td>{{ "%.2f"|format(result.elapsed_seconds) }}</td>
+        <td><pre style="margin:0; font-size:11px;">{{ result.best_params }}</pre></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+{% endblock %}

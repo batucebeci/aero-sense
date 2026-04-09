@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Trace · Aero-Sense{% endblock %}
+{% block content %}
+<section class="page-header">
+  <h1>Time-series trace</h1>
+  <p class="lead muted">Plot one sensor of a single system over time, with fault windows highlighted as colored bands.</p>
+</section>
+
+{% if not has_data %}
+  <section class="card"><p class="muted">Load a dataset first from the <a href="/data">Dataset</a> page.</p></section>
+{% else %}
+<form method="get" action="/trace" class="card inline-form">
+  <label>System
+    <select name="system_id">
+      {% for s in systems %}
+        <option value="{{ s }}" {% if s == selected_system %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Sensor
+    <select name="sensor">
+      {% for s in sensors %}
+        <option value="{{ s }}" {% if s == selected_sensor %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <button class="btn-secondary" type="submit" onclick="document.getElementById('trace-spinner').style.display='inline';">Show</button>
+  <span id="trace-spinner" style="display:none; margin-left:12px; color:var(--muted);">building chart… large systems are downsampled to 2000 points</span>
+</form>
+
+<section class="card">
+  <div class="chart">{{ trace_chart | safe }}</div>
+</section>
+{% endif %}
+{% endblock %}

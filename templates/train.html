@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Train · Aero-Sense{% endblock %}
+{% block content %}
+<section class="page-header">
+  <h1>Train &amp; compare models</h1>
+  <p class="lead muted">Train all classifiers on the same dataset and compare their metrics.</p>
+</section>
+
+{% if not has_data %}
+  <section class="card"><p class="muted">Load a dataset first from the <a href="/data">Dataset</a> page.</p></section>
+{% else %}
+<form method="post" action="/train/run" class="card" onsubmit="document.getElementById('train-spinner').style.display='inline';">
+  <h3>Train all models</h3>
+  <p class="muted small">Random Forest, SVM, KNN, Logistic Regression, Decision Tree, LightGBM, XGBoost — trained in one click; the highest macro-F1 model is saved to the registry.</p>
+  <p class="muted small">Expected duration: small datasets (&lt;1k rows) ~5 s, medium (~10k rows) 30–60 s, large (CMAPSS FD004 60k rows) 5–10 min. SVM scales as O(n²) and dominates time. Other pages stay responsive thanks to the threadpool.</p>
+  <button class="btn-primary" type="submit">Train</button>
+  <span id="train-spinner" style="display:none; margin-left:12px; color:var(--muted);">training… don't close the tab</span>
+</form>
+{% endif %}
+
+{% if has_models %}
+<section class="card">
+  <h2>Model comparison</h2>
+  <div class="scroll-x">{{ comparison_table_html | safe }}</div>
+  <div class="chart">{{ comparison_chart | safe }}</div>
+  <p class="muted">Best model (by macro F1): <strong>{{ best_model }}</strong></p>
+</section>
+
+<section class="card">
+  <h2>Per-model deep dive</h2>
+  <form method="get" action="/train" class="inline-form">
+    <label>Model
+      <select name="model">
+        {% for name in model_names %}
+          <option value="{{ name }}" {% if name == focus_model %}selected{% endif %}>{{ name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button class="btn-secondary" type="submit">Show</button>
+  </form>
+  <div class="grid grid-2">
+    <div class="chart">{{ confusion_chart | safe }}</div>
+    <div class="chart">{{ f1_chart | safe }}</div>
+  </div>
+  <details class="muted">
+    <summary>Classification report</summary>
+    <pre>{{ classification_report }}</pre>
+  </details>
+</section>
+{% endif %}
+{% endblock %}
