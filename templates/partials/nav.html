@@ -1,0 +1,11 @@
+<header class="site-nav">
+  <div class="brand">
+    <span class="brand-mark">AS</span>
+    <span class="brand-text">Aero-Sense · Fault Diagnosis</span>
+  </div>
+  <nav>
+    {% for href, label in nav_links %}
+      <a href="{{ href }}" class="nav-link {% if request.url.path == href or (href != '/' and request.url.path.startswith(href)) %}active{% endif %}">{{ label }}</a>
+    {% endfor %}
+  </nav>
+</header>
